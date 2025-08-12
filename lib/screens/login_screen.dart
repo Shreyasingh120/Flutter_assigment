@@ -3,54 +3,76 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../blocs/login_bloc.dart';
 import 'home_screen.dart';
 
-class LoginScreen extends StatelessWidget {
-  final TextEditingController emailController = TextEditingController();
-  final TextEditingController passwordController = TextEditingController();
+class LoginScreen extends StatefulWidget {
+  const LoginScreen({super.key});
+
+  @override
+  State<LoginScreen> createState() => _LoginScreenState();
+}
+
+class _LoginScreenState extends State<LoginScreen> {
+  final _formKey = GlobalKey<FormState>();
+  final _usernameController = TextEditingController();
+  final _passwordController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (context) => LoginBloc(),
-      child: Scaffold(
-        appBar: AppBar(title: Text('Login')),
-        body: BlocListener<LoginBloc, LoginState>(
-          listener: (context, state) {
-            if (state.isValid) {
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => HomeScreen()),
-              );
-            }
-          },
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
+    return Scaffold(
+      appBar: AppBar(title: const Text('Login')),
+      body: BlocListener<LoginBloc, LoginState>(
+        listener: (context, state) {
+          if (state is LoginSuccess) {
+            Navigator.of(context).pushReplacement(
+              MaterialPageRoute(builder: (_) => const HomeScreen()),
+            );
+          } else if (state is LoginFailure) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(state.error)),
+            );
+          }
+        },
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Form(
+            key: _formKey,
             child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                TextField(
-                  controller: emailController,
-                  decoration: InputDecoration(labelText: 'Email'),
+                TextFormField(
+                  controller: _usernameController,
+                  decoration: const InputDecoration(labelText: 'Username'),
+                  validator: (value) {
+                    if (value?.isEmpty ?? true) {
+                      return 'Please enter username';
+                    }
+                    return null;
+                  },
                 ),
-                TextField(
-                  controller: passwordController,
-                  decoration: InputDecoration(labelText: 'Password'),
+                const SizedBox(height: 16),
+                TextFormField(
+                  controller: _passwordController,
+                  decoration: const InputDecoration(labelText: 'Password'),
                   obscureText: true,
+                  validator: (value) {
+                    if (value?.isEmpty ?? true) {
+                      return 'Please enter password';
+                    }
+                    return null;
+                  },
                 ),
-                SizedBox(height: 20),
+                const SizedBox(height: 24),
                 ElevatedButton(
                   onPressed: () {
-                    BlocProvider.of<LoginBloc>(context).add(
-                      LoginEvent(emailController.text, passwordController.text),
-                    );
-                  },
-                  child: Text('Submit'),
-                ),
-                BlocBuilder<LoginBloc, LoginState>(
-                  builder: (context, state) {
-                    if (state.errorMessage.isNotEmpty) {
-                      return Text(state.errorMessage, style: TextStyle(color: Colors.red));
+                    if (_formKey.currentState?.validate() ?? false) {
+                      context.read<LoginBloc>().add(
+                            LoginSubmitted(
+                              _usernameController.text,
+                              _passwordController.text,
+                            ),
+                          );
                     }
-                    return Container();
                   },
+                  child: const Text('Login'),
                 ),
               ],
             ),
@@ -58,5 +80,12 @@ class LoginScreen extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    _usernameController.dispose();
+    _passwordController.dispose();
+    super.dispose();
   }
 }

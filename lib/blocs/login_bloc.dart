@@ -1,35 +1,56 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:equatable/equatable.dart';
 
-class LoginEvent {
-  final String email;
+// Events
+abstract class LoginEvent extends Equatable {
+  @override
+  List<Object?> get props => [];
+}
+
+class LoginSubmitted extends LoginEvent {
+  final String username;
   final String password;
 
-  LoginEvent(this.email, this.password);
-}
-
-class LoginState {
-  final bool isValid;
-  final String errorMessage;
-
-  LoginState({required this.isValid, this.errorMessage = ''});
-}
-
-class LoginBloc extends Bloc<LoginEvent, LoginState> {
-  LoginBloc() : super(LoginState(isValid: false));
+  LoginSubmitted(this.username, this.password);
 
   @override
-  Stream<LoginState> mapEventToState(LoginEvent event) async* {
-    final emailValid = RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(event.email);
-    final passwordValid = event.password.length >= 8 &&
-        RegExp(r'[A-Z]').hasMatch(event.password) &&
-        RegExp(r'[a-z]').hasMatch(event.password) &&
-        RegExp(r'[0-9]').hasMatch(event.password) &&
-        RegExp(r'[!@#\$&*~]').hasMatch(event.password);
+  List<Object?> get props => [username, password];
+}
 
-    if (emailValid && passwordValid) {
-      yield LoginState(isValid: true);
-    } else {
-      yield LoginState(isValid: false, errorMessage: 'Invalid credentials');
+// States
+abstract class LoginState extends Equatable {
+  @override
+  List<Object?> get props => [];
+}
+
+class LoginInitial extends LoginState {}
+class LoginLoading extends LoginState {}
+class LoginSuccess extends LoginState {}
+class LoginFailure extends LoginState {
+  final String error;
+  LoginFailure(this.error);
+
+  @override
+  List<Object?> get props => [error];
+}
+
+// BLoC
+class LoginBloc extends Bloc<LoginEvent, LoginState> {
+  LoginBloc() : super(LoginInitial()) {
+    on<LoginSubmitted>(_onLoginSubmitted);
+  }
+
+  Future<void> _onLoginSubmitted(
+    LoginSubmitted event,
+    Emitter<LoginState> emit,
+  ) async {
+    emit(LoginLoading());
+    try {
+      // Add your authentication logic here
+      await Future.delayed(const Duration(seconds: 2)); // Simulate API call
+      emit(LoginSuccess());
+    } catch (e) {
+      emit(LoginFailure(e.toString()));
     }
   }
 }

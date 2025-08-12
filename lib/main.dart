@@ -1,23 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'blocs/login_bloc.dart'; // Import your LoginBloc
-import 'screens/login_screen.dart';
+import 'blocs/image_bloc.dart';
+import 'screens/home_screen.dart';
 
 void main() {
-  runApp(MyApp());
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Login Example',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-      ),
       home: BlocProvider(
-        create: (context) => LoginBloc(), // Provide the LoginBloc here
-        child: LoginScreen(),
+        create: (context) => ImageBloc()..add(FetchImages()),
+        child: const HomeScreen(),
       ),
     );
   }
