@@ -1,26 +1,26 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:equatable/equatable.dart';
 
-// Events
 abstract class LoginEvent extends Equatable {
+  const LoginEvent();
   @override
-  List<Object?> get props => [];
+  List<Object> get props => [];
 }
 
 class LoginSubmitted extends LoginEvent {
-  final String username;
+  final String email;
   final String password;
 
-  LoginSubmitted(this.username, this.password);
+  const LoginSubmitted(this.email, this.password);
 
   @override
-  List<Object?> get props => [username, password];
+  List<Object> get props => [email, password];
 }
 
-// States
 abstract class LoginState extends Equatable {
+  const LoginState();
   @override
-  List<Object?> get props => [];
+  List<Object> get props => [];
 }
 
 class LoginInitial extends LoginState {}
@@ -28,13 +28,11 @@ class LoginLoading extends LoginState {}
 class LoginSuccess extends LoginState {}
 class LoginFailure extends LoginState {
   final String error;
-  LoginFailure(this.error);
-
+  const LoginFailure(this.error);
   @override
-  List<Object?> get props => [error];
+  List<Object> get props => [error];
 }
 
-// BLoC
 class LoginBloc extends Bloc<LoginEvent, LoginState> {
   LoginBloc() : super(LoginInitial()) {
     on<LoginSubmitted>(_onLoginSubmitted);
@@ -46,9 +44,19 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
   ) async {
     emit(LoginLoading());
     try {
-      // Add your authentication logic here
-      await Future.delayed(const Duration(seconds: 2)); // Simulate API call
-      emit(LoginSuccess());
+      final emailValid = RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(event.email);
+      final passwordValid = event.password.length >= 8 &&
+          RegExp(r'[A-Z]').hasMatch(event.password) &&
+          RegExp(r'[a-z]').hasMatch(event.password) &&
+          RegExp(r'[0-9]').hasMatch(event.password) &&
+          RegExp(r'[^A-Za-z0-9]').hasMatch(event.password);
+
+      if (emailValid && passwordValid) {
+        await Future.delayed(const Duration(seconds: 1));
+        emit(LoginSuccess());
+      } else {
+        emit(const LoginFailure('Invalid email or password format'));
+      }
     } catch (e) {
       emit(LoginFailure(e.toString()));
     }

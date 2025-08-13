@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'blocs/login_bloc.dart';
 import 'blocs/image_bloc.dart';
-import 'screens/home_screen.dart';
+import 'screens/login_screen.dart';
 
 void main() {
   runApp(const MyApp());
@@ -12,10 +13,20 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      home: BlocProvider(
-        create: (context) => ImageBloc()..add(FetchImages()),
-        child: const HomeScreen(),
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider(create: (context) => LoginBloc()),
+        BlocProvider(create: (context) => ImageBloc()),
+      ],
+      child: MaterialApp(
+        title: 'Flutter Email Login',
+        debugShowCheckedModeBanner: false,
+        theme: ThemeData(
+          inputDecorationTheme: const InputDecorationTheme(
+            border: OutlineInputBorder(),
+          ),
+        ),
+        home: const LoginScreen(),
       ),
     );
   }
